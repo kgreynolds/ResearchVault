@@ -520,7 +520,7 @@ function process_Surface_csv(file_path::String; make_file::Bool=false)
     end
     
     # Remove "Data, " from the remaining column names and replace "ns" with " ns" and "us" with " us"
-    new_names = [replace(replace(replace(replace(String(name), "Data, " => ""), "ns" => " ns"), "us" => " us"), "nm" => " nm") for name in names(df)]
+    new_names = [replace(replace(replace(replace(String(name), "Data, " => ""), "ns" => " ns"), "us" => " µs"), "nm" => " nm") for name in names(df)]
     rename!(df, new_names)
 
     if make_file
