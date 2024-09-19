@@ -30,7 +30,7 @@ Anthracene_TA_Kinetics_399nm = BiFitIRF_new(Anthracene_TA_Kinetics,5,-10.0, 1000
 Anthracene_TA_Kinetics_420nm = BiFitIRF_new(Anthracene_TA_Kinetics,2,-10.0, 1000, [4.122, 0.956, -0.6092, 3.947, 22.6853, 147.9505, 0.0001], 1,1000,false,200)
 Anthracene_TA_Kinetics_601nm = MonoFitIRF_New(Anthracene_TA_Kinetics,3,0.0, 1000, [4.122, 0.956, 0.119, 3.692, -0.0], 10,10,false,200)
 
-Singlet  = mean([3.4901,3.7869,3.947,3.692])
+Singlet  = mean([3.4901,3.7869,3.947])
 Singlet_stdev  = std([3.4901,3.7869,3.947,3.692])
 
 Triplet  = mean([161.3797,146.7088,147.9505])
