@@ -450,6 +450,50 @@ end
 MesAcr_PhosphineOxide_AntrhaceneUvVis_Comparison()
 save("JULIA/Outputs/ MesAcr_PhosphineOxide_AntrhaceneUvVis_Comparison.png",MesAcr_PhosphineOxide_AntrhaceneUvVis_Comparison())
 
+function MesAcr_PhosphineOxide_Antrhacene_PCA_Comparison(f = Figure())
+
+    ### First Panel TA Spectra  ##############################################################################
+        ax =    CairoMakie.Axis(
+                f[1,1], palette = (color = palette(ColorSchemes.hsv, 3),), ## or replace ncol with Integer 
+
+                title = "Acr Phosphine Oxide + Anthracene PCA Comparison",
+                xlabel = "Wavelength (nm)", 
+                ylabel = "ΔA (OD)", 
+                xminorticks = IntervalsBetween(2)
+            )
+        width = 3
+
+        ### Custom Axis limits ##############################################################################
+            # ax.xticks= 1:2:17
+            # CairoMakie.xlims!(375,910)
+            # CairoMakie.ylims!(-0.02,nothing)
+
+        ### Plot Data ##############################################################################
+
+
+            lines!(ax, PCA_Spectra[:,1],PCA_Spectra[:,4],linewidth = width,label = "PCA 3 of AcrPO + Anthracene")
+            lines!(ax, Anthracene_PCA_Spectra[:,1],Anthracene_PCA_Spectra[:,2],linewidth = width,label = "PCA 2 of Anthracene")
+
+
+            axislegend(
+                position = :rt, 
+                nbanks = 1, 
+                framevisible = false, 
+                labelsize = 15
+            )
+
+            # Legend(f[1,2], ax, "Delay Time (ns)", framevisible = false, nbanks = 1 ) #:rt (right-top :rb (right bottom) etc)
+            hlines!(ax,0, linewidth = 1,color = :black,linestyle = :dash)
+            # text!(x,y,text = "text", color = :red, textsize = 20)
+            # CairoMakie.vspan!(431, 441; ymin = 0.0, ymax = 1.0, color = :lightblue)
+            colsize!(f.layout,1,Aspect(1, 1.25)) #Set aspect ration of the y vs. x axis) can also be set to Relative(2/3) for leative column size
+            rowsize!(f.layout,1, 400)
+
+    resize_to_layout!(f)
+    f
+end
+MesAcr_PhosphineOxide_Antrhacene_PCA_Comparison()
+save("JULIA/Outputs/ MesAcr_PhosphineOxide_Antrhacene_PCA_Comparison.png",MesAcr_PhosphineOxide_Antrhacene_PCA_Comparison())
 
 
 ####### PCA AcrPO + Anthracene ##########################################################################################
@@ -494,8 +538,8 @@ save("JULIA/Outputs/ MesAcr_PhosphineOxide_AntrhaceneUvVis_Comparison.png",MesAc
     function PCA_Fig(f = Figure())
 
         U, S, V, explained_variance_ratio = pca_ta(absorbance_data)
-        Wavelengths = data[2:end,1]
-        Delay_times = transpose(Matrix(data))[2:end,1]
+        Wavelengths = TA_data[2:end,1]
+        Delay_times = transpose(Matrix(TA_data))[2:end,1]
         components = collect(1:3)
         ### 1st Panel Principal Components  ##############################################################################
             ax =    CairoMakie.Axis(f[1,1], palette = (color = palette(ColorSchemes.hsv, 4),), ## or replace ncol with Integer
@@ -651,8 +695,8 @@ PCA_2_Kinetics = BiFitIRF_new(PCA_Kinetics,3,-10.0, 200,[0.0086, 0.001, -0.0666,
 function PCA_Fig(f = Figure())
 
     U, S, V, explained_variance_ratio = pca_ta(absorbance_data) .* (-1)
-    Wavelengths = data[2:end,1]
-    Delay_times = transpose(Matrix(data))[2:end,1]
+    Wavelengths = TA_data[2:end,1]
+    Delay_times = transpose(Matrix(TA_data))[2:end,1]
     components = collect(1:2)
     ### 1st Panel Principal Components  ##############################################################################
         ax =    CairoMakie.Axis(f[1,1], palette = (color = palette(ColorSchemes.hsv, 4),), ## or replace ncol with Integer

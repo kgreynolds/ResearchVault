@@ -42,7 +42,7 @@ Data = BiFitIRF_new(Data,2,0.0, 800, [0.008, 0.001, 50.592, 307.017,10.0, 100, 0
             ax =    CairoMakie.Axis(
                     f[1,1], palette = (color = palette(ColorSchemes.inferno, ncol(TA_Spectra)+1),), ## or replace ncol with Integer 
     
-                    title = "Title",
+                    title = "Pd-TFP TA Spectra",
                     xlabel = "Wavelength (nm)", 
                     ylabel = "ΔA (OD)", 
                     xminorticks = IntervalsBetween(2)
@@ -100,7 +100,7 @@ Data = BiFitIRF_new(Data,2,0.0, 800, [0.008, 0.001, 50.592, 307.017,10.0, 100, 0
     
             ax2 =    CairoMakie.Axis(
                     f[1,2], palette = (color = palette(ColorSchemes.hsv, 4),),
-                    title = "Title",
+                    title = "Pd-TFP TA Kinetics",
                     xlabel = "Time (ns)", 
                     ylabel = "ΔA (OD)", 
                     # xscale = Makie.Symlog10(1.0), 
@@ -130,7 +130,7 @@ Data = BiFitIRF_new(Data,2,0.0, 800, [0.008, 0.001, 50.592, 307.017,10.0, 100, 0
             end
     
                 axislegend("Wavelength", 
-                    position = :rt, 
+                    position = :rc, 
                     nbanks = 3, 
                     framevisible = false, 
                     labelsize = 15
@@ -172,7 +172,7 @@ Data = BiFitIRF_new(Data,2,0.0, 800, [0.008, 0.001, 50.592, 307.017,10.0, 100, 0
         f
     end
     Pd_TFP_TA_Fig()
-    save("JULIA/Outputs/Pd_TFP_TA_Fig.pdf",Pd_TFP_TA_Fig())
+    save("JULIA/Outputs/Pd_TFP_TA_Fig.png",Pd_TFP_TA_Fig())
 
 
 #### Pd_TFP_CH3 ################################################################################################
@@ -200,7 +200,7 @@ Data = BiFitIRF_new(Data,2,0.0, 800, [0.008, 0.001, 50.592, 307.017,10.0, 100, 0
             ax =    CairoMakie.Axis(
                     f[1,1], palette = (color = palette(ColorSchemes.inferno, ncol(TA_Spectra)+1),), ## or replace ncol with Integer 
     
-                    title = "Title",
+                    title = "Pd(CH₃)-TFP TA Spectra",
                     xlabel = "Wavelength (nm)", 
                     ylabel = "ΔA (OD)", 
                     xminorticks = IntervalsBetween(2)
@@ -241,7 +241,7 @@ Data = BiFitIRF_new(Data,2,0.0, 800, [0.008, 0.001, 50.592, 307.017,10.0, 100, 0
     
             ax2 =    CairoMakie.Axis(
                     f[1,2], palette = (color = palette(ColorSchemes.hsv, 4),),
-                    title = "Title",
+                    title = "Pd(CH₃)-TFP TA Kinetics",
                     xlabel = "Time (ns)", 
                     ylabel = "ΔA (OD)", 
                     # xscale = Makie.Symlog10(1.0), 
@@ -271,7 +271,7 @@ Data = BiFitIRF_new(Data,2,0.0, 800, [0.008, 0.001, 50.592, 307.017,10.0, 100, 0
             end
     
                 axislegend("Wavelength", 
-                    position = :rt, 
+                    position = :rc, 
                     nbanks = 3, 
                     framevisible = false, 
                     labelsize = 15
@@ -313,7 +313,7 @@ Data = BiFitIRF_new(Data,2,0.0, 800, [0.008, 0.001, 50.592, 307.017,10.0, 100, 0
         f
     end
     Pd_TFP_CH3_TA_Fig()
-    save("JULIA/Outputs/Pd_TFP_CH3_TA_Fig.pdf",Pd_TFP_CH3_TA_Fig())
+    save("JULIA/Outputs/Pd_TFP_CH3_TA_Fig.png",Pd_TFP_CH3_TA_Fig())
 
 #### Zn_Chlorin Band 1 ################################################################################################
     Zn_Chlorin_b1_Spectra = CSV.read("/Users/kris/Desktop/ResearchVault/RESEARCH/NOCERA GROUP/PROJECTS/Dilek_Porphyrins/Dilek_Porphyrins/FUELS/Analysis/ZnChlorin_band1_TA_Spectra.csv", header = true, DataFrame)
@@ -343,7 +343,7 @@ Data = BiFitIRF_new(Data,2,0.0, 800, [0.008, 0.001, 50.592, 307.017,10.0, 100, 0
             ax =    CairoMakie.Axis(
                     f[1,1], palette = (color = palette(ColorSchemes.inferno, ncol(TA_Spectra)+1),), ## or replace ncol with Integer 
     
-                    title = "Title",
+                    title = "Zn Chlorin Band 1 TA Spectra",
                     xlabel = "Wavelength (nm)", 
                     ylabel = "ΔA (OD)", 
                     xminorticks = IntervalsBetween(2)
@@ -384,7 +384,7 @@ Data = BiFitIRF_new(Data,2,0.0, 800, [0.008, 0.001, 50.592, 307.017,10.0, 100, 0
     
             ax2 =    CairoMakie.Axis(
                     f[1,2], palette = (color = palette(ColorSchemes.hsv, 4),),
-                    title = "Title",
+                    title = "Zn Chlorin Band 1 TA Kinetics",
                     xlabel = "Time (ns)", 
                     ylabel = "ΔA (OD)", 
                     # xscale = Makie.Symlog10(1.0), 
@@ -414,7 +414,7 @@ Data = BiFitIRF_new(Data,2,0.0, 800, [0.008, 0.001, 50.592, 307.017,10.0, 100, 0
             end
     
                 axislegend("Wavelength", 
-                    position = :rt, 
+                    position = :rc, 
                     nbanks = 3, 
                     framevisible = false, 
                     labelsize = 15
@@ -456,7 +456,7 @@ Data = BiFitIRF_new(Data,2,0.0, 800, [0.008, 0.001, 50.592, 307.017,10.0, 100, 0
         f
     end
     Zn_Chlorin_b1_TA()
-    save("JULIA/Outputs/TA_Fig.pdf",Zn_Chlorin_b1_TA())
+    save("JULIA/Outputs/TA_Fig.png",Zn_Chlorin_b1_TA())
 
 #### Zn_Chlorin Band 2 ################################################################################################
     Zn_Chlorin_b2_Spectra = CSV.read("/Users/kris/Desktop/ResearchVault/RESEARCH/NOCERA GROUP/PROJECTS/Dilek_Porphyrins/Dilek_Porphyrins/FUELS/Analysis/ZnChlorin_band2_TA_Spectra.csv", header = true, DataFrame)
@@ -486,7 +486,7 @@ Data = BiFitIRF_new(Data,2,0.0, 800, [0.008, 0.001, 50.592, 307.017,10.0, 100, 0
             ax =    CairoMakie.Axis(
                     f[1,1], palette = (color = palette(ColorSchemes.inferno, ncol(TA_Spectra)+1),), ## or replace ncol with Integer 
     
-                    title = "Title",
+                    title = "Zn Chlorin Band 2 TA Spectra",
                     xlabel = "Wavelength (nm)", 
                     ylabel = "ΔA (OD)", 
                     xminorticks = IntervalsBetween(2)
@@ -527,7 +527,7 @@ Data = BiFitIRF_new(Data,2,0.0, 800, [0.008, 0.001, 50.592, 307.017,10.0, 100, 0
     
             ax2 =    CairoMakie.Axis(
                     f[1,2], palette = (color = palette(ColorSchemes.hsv, 4),),
-                    title = "Title",
+                    title = "Zn Chlorin Band 2 TA Kinetics",
                     xlabel = "Time (ns)", 
                     ylabel = "ΔA (OD)", 
                     # xscale = Makie.Symlog10(1.0), 
@@ -557,7 +557,7 @@ Data = BiFitIRF_new(Data,2,0.0, 800, [0.008, 0.001, 50.592, 307.017,10.0, 100, 0
             end
     
                 axislegend("Wavelength", 
-                    position = :rt, 
+                    position = :rc, 
                     nbanks = 3, 
                     framevisible = false, 
                     labelsize = 15
