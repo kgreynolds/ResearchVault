@@ -9,11 +9,6 @@ Kris_Figure_Theme = merge(Theme(
     )
     ), theme_latexfonts())
 set_theme!(Kris_Figure_Theme)
-## IMPORT DATA
-file1 = CSV.read("path", header = true, DataFrame)
-Data = MonoFitIRF_New(Data,2,0.0, 800, [0.008, 0.001, 50.592, 307.017, 0.0], 10,Inf,false,10000)
-Data = BiFitIRF_new(Data,2,0.0, 800, [0.008, 0.001, 50.592, 307.017,10.0, 100, 0.0], 10,Inf,false,10000)
-
 
 
 #### Pd_TFP ################################################################################################
@@ -101,7 +96,7 @@ Data = BiFitIRF_new(Data,2,0.0, 800, [0.008, 0.001, 50.592, 307.017,10.0, 100, 0
             ax2 =    CairoMakie.Axis(
                     f[1,2], palette = (color = palette(ColorSchemes.hsv, 4),),
                     title = "Pd-TFP TA Kinetics",
-                    xlabel = "Time (ns)", 
+                    xlabel = "Time (µs)", 
                     ylabel = "ΔA (OD)", 
                     # xscale = Makie.Symlog10(1.0), 
                     # xticks = [-5, 0, 5, 10,50, 100, 1000], 
@@ -118,11 +113,11 @@ Data = BiFitIRF_new(Data,2,0.0, 800, [0.008, 0.001, 50.592, 307.017,10.0, 100, 0
             ### Plot Kinetic Data ##############################################################################
     
             for (data, label) in TA_Kinetics
-                Makie.lines!(ax2, data[:, 1], data[:, 2], # This is the raw kinetic Trace
+                Makie.lines!(ax2, data[:, 1] ./1000, data[:, 2], # This is the raw kinetic Trace
                     linewidth = 3, 
                     label = label
                 )
-                lines!(ax2, data[:, 1], data[:, 3], # This is the Fitted curve
+                lines!(ax2, data[:, 1] ./1000, data[:, 3], # This is the Fitted curve
                     linewidth = 2, 
                     linestyle = :dash, 
                     color = :black
@@ -172,7 +167,7 @@ Data = BiFitIRF_new(Data,2,0.0, 800, [0.008, 0.001, 50.592, 307.017,10.0, 100, 0
         f
     end
     Pd_TFP_TA_Fig()
-    save("JULIA/Outputs/Pd_TFP_TA_Fig.png",Pd_TFP_TA_Fig())
+    save("JULIA/Outputs/Pd_TFP_TA_Fig.eps",Pd_TFP_TA_Fig())
 
 
 #### Pd_TFP_CH3 ################################################################################################
@@ -242,7 +237,7 @@ Data = BiFitIRF_new(Data,2,0.0, 800, [0.008, 0.001, 50.592, 307.017,10.0, 100, 0
             ax2 =    CairoMakie.Axis(
                     f[1,2], palette = (color = palette(ColorSchemes.hsv, 4),),
                     title = "Pd(CH₃)-TFP TA Kinetics",
-                    xlabel = "Time (ns)", 
+                    xlabel = "Time (µs)", 
                     ylabel = "ΔA (OD)", 
                     # xscale = Makie.Symlog10(1.0), 
                     # xticks = [-5, 0, 5, 10,50, 100, 1000], 
@@ -259,11 +254,11 @@ Data = BiFitIRF_new(Data,2,0.0, 800, [0.008, 0.001, 50.592, 307.017,10.0, 100, 0
             ### Plot Kinetic Data ##############################################################################
     
             for (data, label) in TA_Kinetics
-                Makie.lines!(ax2, data[:, 1], data[:, 2], # This is the raw kinetic Trace
+                Makie.lines!(ax2, data[:, 1] ./ 1000, data[:, 2], # This is the raw kinetic Trace
                     linewidth = 3, 
                     label = label
                 )
-                lines!(ax2, data[:, 1], data[:, 3], # This is the Fitted curve
+                lines!(ax2, data[:, 1] ./1000, data[:, 3], # This is the Fitted curve
                     linewidth = 2, 
                     linestyle = :dash, 
                     color = :black
@@ -313,7 +308,7 @@ Data = BiFitIRF_new(Data,2,0.0, 800, [0.008, 0.001, 50.592, 307.017,10.0, 100, 0
         f
     end
     Pd_TFP_CH3_TA_Fig()
-    save("JULIA/Outputs/Pd_TFP_CH3_TA_Fig.png",Pd_TFP_CH3_TA_Fig())
+    save("JULIA/Outputs/Pd_TFP_CH3_TA_Fig.eps",Pd_TFP_CH3_TA_Fig())
 
 #### Zn_Chlorin Band 1 ################################################################################################
     Zn_Chlorin_b1_Spectra = CSV.read("/Users/kris/Desktop/ResearchVault/RESEARCH/NOCERA GROUP/PROJECTS/Dilek_Porphyrins/Dilek_Porphyrins/FUELS/Analysis/ZnChlorin_band1_TA_Spectra.csv", header = true, DataFrame)
@@ -456,7 +451,153 @@ Data = BiFitIRF_new(Data,2,0.0, 800, [0.008, 0.001, 50.592, 307.017,10.0, 100, 0
         f
     end
     Zn_Chlorin_b1_TA()
-    save("JULIA/Outputs/TA_Fig.png",Zn_Chlorin_b1_TA())
+    save("JULIA/Outputs/Zn_Chlorin_b1_TA.eps",Zn_Chlorin_b1_TA())
+
+
+#### Zn_Chlorin Band 1 AIRFREE ################################################################################################
+    Zn_Chlorin_b1_AIRFREE_Spectra = CSV.read("/Users/kris/Desktop/ResearchVault/RESEARCH/NOCERA GROUP/PROJECTS/Dilek_Porphyrins/Dilek_Porphyrins/FUELS/Analysis/ZnChlorin_band1_AIRFREE_TA_Spectra_Surface_processed.csv", header = true, DataFrame)
+    Zn_Chlorin_b1_AIRFREE_Kinetics = CSV.read("/Users/kris/Desktop/ResearchVault/RESEARCH/NOCERA GROUP/PROJECTS/Dilek_Porphyrins/Dilek_Porphyrins/FUELS/Analysis/ZnChlorin_band1_AIRFREE_TA_Kinetics_Surface_processed.csv", header = true, DataFrame)
+
+    Zn_Chlorin_b1_AIRFREE_400nm = BiFitIRF_new(Zn_Chlorin_b1_AIRFREE_Kinetics,5,-1.0, 10000, [0.001, 0.047, -1.9315, 735.7407, -1.2555, 302.2269, -0.0001], 10,Inf,false,200)
+    Zn_Chlorin_b1_AIRFREE_420nm = BiFitIRF_new(Zn_Chlorin_b1_AIRFREE_Kinetics,4,-1.0, 4700, [0.0011, 0.0378, -34.2665, 608.6563, -9.1128, 215.3953, 0.0], 10,Inf,false,200)
+    Zn_Chlorin_b1_AIRFREE_440nm = BiFitIRF_new(Zn_Chlorin_b1_AIRFREE_Kinetics,2,-1.0, 4700, [0.0011, 0.0378, 5.6173, 634.5695, 1.936, 241.4644, 0.0], 10,Inf,false,200)
+    Zn_Chlorin_b1_AIRFREE_615nm = BiFitIRF_new(Zn_Chlorin_b1_AIRFREE_Kinetics,3,-1.0, 4700, [0.0011, 0.0378, -6.7945, 679.5719, -2.1454, 256.6449, 0.0006], 10,Inf,false,200)
+
+    τ1_mean_Zn_Chlorin_b1AIRFREE = mean([608.6563, 634.5695, 679.5719])
+    τ1_stdev_Zn_Chlorin_b1_AIRFREE = std([608.6563, 634.5695, 679.5719])
+
+    τ2_mean_Zn_Chlorin_b1AIRFREE = mean([ 215.3953, 241.4644, 256.6449])
+    τ2_stdev_Zn_Chlorin_b1_AIRFREE = std([ 215.3953, 241.4644, 256.6449])
+
+
+    function Zn_Chlorin_b1_AIRFREE_TA(f = Figure())
+
+        TA_Spectra = Zn_Chlorin_b1_AIRFREE_Spectra
+        TA_Kinetics = [
+            (Zn_Chlorin_b1_AIRFREE_420nm[1], " 420 nm"),
+            (Zn_Chlorin_b1_AIRFREE_440nm[1], "440 nm"),
+            (Zn_Chlorin_b1_AIRFREE_615nm[1], "615 nm")
+        ]
+        
+        ### First Panel TA Spectra  ##############################################################################
+
+            ax =    CairoMakie.Axis(
+                    f[1,1], palette = (color = palette(ColorSchemes.inferno, ncol(TA_Spectra)+1),), ## or replace ncol with Integer 
+
+                    title = "Zn Chlorin Band 1 Airfree TA Spectra",
+                    xlabel = "Wavelength (nm)", 
+                    ylabel = "ΔA (OD)", 
+                    xminorticks = IntervalsBetween(2)
+                )
+            
+            width = 3
+
+            ### Custom Axis limits ##############################################################################
+                # ax.xticks= 1:2:17
+                # CairoMakie.xlims!(375,910)
+                # CairoMakie.ylims!(nothing,0.04)
+
+            ### Plot Data ##############################################################################
+
+                for i in 2:ncol(TA_Spectra) ## or replace ncol(Data) with a vector of custom indecies
+                    lines!(ax, TA_Spectra[:,1],TA_Spectra[:,i],linewidth = width,label = " $(names(TA_Spectra)[i])")
+                
+                end
+
+                axislegend("Delay Time", 
+                    position = :rb, 
+                    nbanks = 3, 
+                    framevisible = false, 
+                    labelsize = 15
+                )
+
+                # Legend(f[1,2], ax, "Delay Time (ns)", framevisible = false, nbanks = 1 ) #:rt (right-top :rb (right bottom) etc)
+
+                hlines!(ax,0, linewidth = 1,color = :black,linestyle = :dash)
+                # text!(x,y,text = "text", color = :red, textsize = 20)
+                # CairoMakie.vspan!(433, 439; ymin = 0.0, ymax = 1.0, color = :blue)
+
+                colsize!(f.layout,1,Aspect(1, 1.25)) #Set aspect ration of the y vs. x axis) can also be set to Relative(2/3) for leative column size
+                rowsize!(f.layout,1, 400)
+            
+
+        # ### Second Panel TA KINETICS ##############################################################################
+
+            ax2 =    CairoMakie.Axis(
+                    f[1,2], palette = (color = palette(ColorSchemes.hsv, 4),),
+                    title = "Zn Chlorin Band 1 Airfree TA Kinetics",
+                    xlabel = "Time (ms)", 
+                    ylabel = "ΔA (OD)", 
+                    # xscale = Makie.Symlog10(1.0), 
+                    # xticks = [-5, 0, 5, 10,50, 100, 1000], 
+                    xminorticks = IntervalsBetween(2)
+                )
+
+            width = 3
+
+            ### Custom Axis limits ##############################################################################
+                # ax.xticks= 1:2:17
+                CairoMakie.xlims!(nothing, 3.5)
+                # CairoMakie.ylims!(-0.001,0.02)
+
+            ### Plot Kinetic Data ##############################################################################
+
+            for (data, label) in TA_Kinetics
+                Makie.lines!(ax2, data[:, 1] ./ 1000, data[:, 2], # This is the raw kinetic Trace
+                    linewidth = 3, 
+                    label = label
+                )
+                lines!(ax2, data[:, 1] ./ 1000, data[:, 3], # This is the Fitted curve
+                    linewidth = 2, 
+                    linestyle = :dash, 
+                    color = :black
+                )
+            end
+
+                axislegend("Wavelength", 
+                    position = :rc, 
+                    nbanks = 3, 
+                    framevisible = false, 
+                    labelsize = 15
+                    )
+
+                hlines!(ax2,0, linewidth = 1,color = :black,linestyle = :dash)
+
+                ### Add Inset axis into plot for kinetics
+                # ax2_1 = Axis(f[1,2], 
+                #     width=Relative(0.5), 
+                #     height=Relative(0.5), 
+                #     halign=0.8, valign=0.5, backgroundcolor=:white, 
+                #     xlabel = "Time (ns)", 
+                #     ylabel = "ΔA (OD)", 
+                # )
+
+                #             CairoMakie.xlims!(-10, 20)
+                #             # CairoMakie.ylims!(-0.003,0.02)
+
+                # for (data, label) in TA_Kinetics
+                #     Makie.lines!(ax2_1, data[:, 1], data[:, 2], # This is the raw kinetic Trace
+                #         linewidth = 3, 
+                #         label = label
+                #     )
+                #     lines!(ax2_1, data[:, 1], data[:, 3], # This is the Fitted curve
+                #         linewidth = 2, 
+                #         linestyle = :dash, 
+                #         color = :black
+                #     )
+                # end
+
+
+                Label(f[1,2,TopLeft()],"(b)", fontsize = 20)
+                Label(f[1,1,TopLeft()],"(a)", fontsize = 20)
+                colgap!(f.layout,1,20)
+                colsize!(f.layout,2,Aspect(1, 1.25)) #Set aspect ration of the y vs. x axis) can also be set to Relative(2/3) for leative column size
+
+        resize_to_layout!(f)
+        f
+    end
+    Zn_Chlorin_b1_AIRFREE_TA()
+    save("JULIA/Outputs/Zn_Chlorin_b1_AIRFREE_TA.png",Zn_Chlorin_b1_AIRFREE_TA())
 
 #### Zn_Chlorin Band 2 ################################################################################################
     Zn_Chlorin_b2_Spectra = CSV.read("/Users/kris/Desktop/ResearchVault/RESEARCH/NOCERA GROUP/PROJECTS/Dilek_Porphyrins/Dilek_Porphyrins/FUELS/Analysis/ZnChlorin_band2_TA_Spectra.csv", header = true, DataFrame)
@@ -599,10 +740,150 @@ Data = BiFitIRF_new(Data,2,0.0, 800, [0.008, 0.001, 50.592, 307.017,10.0, 100, 0
         f
     end
     Zn_Chlorin_b2_TA()
-    save("JULIA/Outputs/Zn_Chlorin_b2_TA.pdf",Zn_Chlorin_b2_TA())
+    save("JULIA/Outputs/Zn_Chlorin_b2_TA.eps",Zn_Chlorin_b2_TA())
 
-### Make Figures 
-####################################################################################################
+#### Zn_Chlorin Band 2 AIRFREE ################################################################################################
+    Zn_Chlorin_b2_AIRFREE_Spectra = CSV.read("/Users/kris/Desktop/ResearchVault/RESEARCH/NOCERA GROUP/PROJECTS/Dilek_Porphyrins/Dilek_Porphyrins/FUELS/Analysis/ZnChlorin_band2_AIRFREE_TA_Spectra_Surface_processed.csv", header = true, DataFrame)
+    Zn_Chlorin_b2_AIRFREE_Kinetics = CSV.read("/Users/kris/Desktop/ResearchVault/RESEARCH/NOCERA GROUP/PROJECTS/Dilek_Porphyrins/Dilek_Porphyrins/FUELS/Analysis/ZnChlorin_band2_AIRFREE_TA_Kinetics_Surface_processed.csv", header = true, DataFrame)
 
+    Zn_Chlorin_b2_AIRFREE_400nm = BiFitIRF_new(Zn_Chlorin_b2_AIRFREE_Kinetics,3,-10.0, 4700, [0.0009, 0.0517, -3.0371, 525.5928, -0.5392, 155.1067, 0.0001], 10,Inf,false,200)
+    Zn_Chlorin_b2_AIRFREE_420nm = BiFitIRF_new(Zn_Chlorin_b2_AIRFREE_Kinetics,2,-1.0, 4700, [0.0012, 0.034, -35.0667, 555.886, -8.0529, 179.7636, -0.0], 10,Inf,false,200)
+    Zn_Chlorin_b2_AIRFREE_440nm = BiFitIRF_new(Zn_Chlorin_b2_AIRFREE_Kinetics,4,-100.0, 4700, [0.001, 0.0416, 7.1183, 553.7915, 1.4872, 177.5456, 0.0001], 10,Inf,false,200)
+    Zn_Chlorin_b2_AIRFREE_610nm = BiFitIRF_new(Zn_Chlorin_b2_AIRFREE_Kinetics,5,-100.0, 4700,[0.0012, 0.034, -6.7596, 653.6461, -2.7439, 245.7357, 0.0005], 10,Inf,false,200)
+
+    τ1_mean_Zn_Chlorin_b2_AIRFREE = mean([555.886,553.7915,  653.6461])
+    τ2_stdev_Zn_Chlorin_b2_AIRFREE = std([555.886,553.7915,  653.6461])
+
+    τ1_mean_Zn_Chlorin_b2_AIRFREE = mean([ 179.7636,177.5456, 245.7357])
+    τ2_stdev_Zn_Chlorin_b2_AIRFREE = std([ 179.7636,177.5456, 245.7357])
+
+    function Zn_Chlorin_b2_AIRFREE_TA(f = Figure())
+
+        TA_Spectra = Zn_Chlorin_b2_AIRFREE_Spectra
+        TA_Kinetics = [
+            (Zn_Chlorin_b2_AIRFREE_420nm[1], " 420 nm"),
+            (Zn_Chlorin_b2_AIRFREE_440nm[1], "440 nm"),
+            (Zn_Chlorin_b2_AIRFREE_610nm[1], "610 nm")
+        ]
+        
+        ### First Panel TA Spectra  ##############################################################################
+
+            ax =    CairoMakie.Axis(
+                    f[1,1], palette = (color = palette(ColorSchemes.inferno, ncol(TA_Spectra)+1),), ## or replace ncol with Integer 
+
+                    title = "Zn Chlorin Band 2 Airfree TA Spectra",
+                    xlabel = "Wavelength (nm)", 
+                    ylabel = "ΔA (OD)", 
+                    xminorticks = IntervalsBetween(2)
+                )
+            
+            width = 3
+
+            ### Custom Axis limits ##############################################################################
+                # ax.xticks= 1:2:17
+                # CairoMakie.xlims!(375,910)
+                # CairoMakie.ylims!(nothing,0.04)
+
+            ### Plot Data ##############################################################################
+
+                for i in 2:ncol(TA_Spectra) ## or replace ncol(Data) with a vector of custom indecies
+                    lines!(ax, TA_Spectra[:,1],TA_Spectra[:,i],linewidth = width,label = " $(names(TA_Spectra)[i])")
+                
+                end
+
+                axislegend("Delay Time", 
+                    position = :rb, 
+                    nbanks = 3, 
+                    framevisible = false, 
+                    labelsize = 15
+                )
+
+                # Legend(f[1,2], ax, "Delay Time (ns)", framevisible = false, nbanks = 1 ) #:rt (right-top :rb (right bottom) etc)
+
+                hlines!(ax,0, linewidth = 1,color = :black,linestyle = :dash)
+                # text!(x,y,text = "text", color = :red, textsize = 20)
+                # CairoMakie.vspan!(433, 439; ymin = 0.0, ymax = 1.0, color = :blue)
+
+                colsize!(f.layout,1,Aspect(1, 1.25)) #Set aspect ration of the y vs. x axis) can also be set to Relative(2/3) for leative column size
+                rowsize!(f.layout,1, 400)
+            
+
+        # ### Second Panel TA KINETICS ##############################################################################
+
+            ax2 =    CairoMakie.Axis(
+                    f[1,2], palette = (color = palette(ColorSchemes.hsv, 4),),
+                    title = "Zn Chlorin Band 2 Airfree TA Kinetics",
+                    xlabel = "Time (ms)", 
+                    ylabel = "ΔA (OD)", 
+                    # xscale = Makie.Symlog10(1.0), 
+                    # xticks = [-5, 0, 5, 10,50, 100, 1000], 
+                    xminorticks = IntervalsBetween(2)
+                )
+
+            width = 3
+
+            ### Custom Axis limits ##############################################################################
+                # ax.xticks= 1:2:17
+                CairoMakie.xlims!(nothing, 3.5)
+                # CairoMakie.ylims!(-0.001,0.02)
+
+            ### Plot Kinetic Data ##############################################################################
+
+            for (data, label) in TA_Kinetics
+                Makie.lines!(ax2, data[:, 1] ./1000, data[:, 2], # This is the raw kinetic Trace
+                    linewidth = 3, 
+                    label = label
+                )
+                lines!(ax2, data[:, 1] ./ 1000, data[:, 3], # This is the Fitted curve
+                    linewidth = 2, 
+                    linestyle = :dash, 
+                    color = :black
+                )
+            end
+
+                axislegend("Wavelength", 
+                    position = :rc, 
+                    nbanks = 3, 
+                    framevisible = false, 
+                    labelsize = 15
+                    )
+
+                hlines!(ax2,0, linewidth = 1,color = :black,linestyle = :dash)
+
+                ### Add Inset axis into plot for kinetics
+                # ax2_1 = Axis(f[1,2], 
+                #     width=Relative(0.5), 
+                #     height=Relative(0.5), 
+                #     halign=0.8, valign=0.5, backgroundcolor=:white, 
+                #     xlabel = "Time (ns)", 
+                #     ylabel = "ΔA (OD)", 
+                # )
+
+                #             CairoMakie.xlims!(-10, 20)
+                #             # CairoMakie.ylims!(-0.003,0.02)
+
+                # for (data, label) in TA_Kinetics
+                #     Makie.lines!(ax2_1, data[:, 1], data[:, 2], # This is the raw kinetic Trace
+                #         linewidth = 3, 
+                #         label = label
+                #     )
+                #     lines!(ax2_1, data[:, 1], data[:, 3], # This is the Fitted curve
+                #         linewidth = 2, 
+                #         linestyle = :dash, 
+                #         color = :black
+                #     )
+                # end
+
+
+                Label(f[1,2,TopLeft()],"(b)", fontsize = 20)
+                Label(f[1,1,TopLeft()],"(a)", fontsize = 20)
+                colgap!(f.layout,1,20)
+                colsize!(f.layout,2,Aspect(1, 1.25)) #Set aspect ration of the y vs. x axis) can also be set to Relative(2/3) for leative column size
+
+        resize_to_layout!(f)
+        f
+    end
+    Zn_Chlorin_b2_AIRFREE_TA()
+    save("JULIA/Outputs/Zn_Chlorin_b2_AIRFREE_TA.png",Zn_Chlorin_b2_AIRFREE_TA())
 
 
