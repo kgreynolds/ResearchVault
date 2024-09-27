@@ -2,6 +2,303 @@ using Interpolations,Plots,Statistics, DataFrames, CSV, Optim,LinearAlgebra, Col
 plotly()
 set_theme!(theme_latexfonts())
 
+
+function GlobalIRF(file, columns::Vector{Int}, t0, uppertimebound, model_type::Symbol = :bi, shared_params=nothing, initial_amplitudes=nothing,bound1=10, bound2=10, num_optimizations=10, noise_level=0.1, size=1000)
+    # Constants
+    sqrt2_inv = 1 / sqrt(2)  # Precompute for efficiency
+
+    # Resize function to interpolate and resize the kinetic trace to uniform size
+    function Resize(x, y, size)
+        x_out = collect(range(first(x), last(x), length=size))  # New x-axis with uniform size
+        interp_func = LinearInterpolation(x, y)  # Linear interpolation
+        y_out = interp_func(x_out)  # Interpolated y-values
+        return x_out, y_out
+    end
+
+    # Define the tri-exponential, bi-exponential, and mono-exponential models
+    @inline function Y_tri(p, x, A₁, A₂, A₃, A_inf)
+        @. ((A_inf + A₁ / p[3] * exp(0.5 * (p[2]/p[3])^2 - (x - p[1]) / p[3])) *
+        (erf(((x - p[1]) / p[2] - p[2] / p[3]) * sqrt2_inv) + 1) / 2 +
+        (A₂ / p[4] * exp(0.5 * (p[2]/p[4])^2 - (x - p[1]) / p[4]) *
+        (erf(((x - p[1]) / p[2] - p[2] / p[4]) * sqrt2_inv) + 1) / 2) +
+        (A₃ / p[5] * exp(0.5 * (p[2]/p[5])^2 - (x - p[1]) / p[5]) *
+        (erf(((x - p[1]) / p[2] - p[2] / p[5]) * sqrt2_inv) + 1) / 2))
+    end
+
+    @inline function Y_bi(p, x, A₁, A₂, A_inf)
+        @. ((A_inf + A₁ / p[3] * exp(0.5 * (p[2]/p[3])^2 - (x - p[1]) / p[3])) *
+        (erf(((x - p[1]) / p[2] - p[2] / p[3]) * sqrt2_inv) + 1) / 2 +
+        (A₂ / p[4] * exp(0.5 * (p[2]/p[4])^2 - (x - p[1]) / p[4]) *
+        (erf(((x - p[1]) / p[2] - p[2] / p[4]) * sqrt2_inv) + 1) / 2))
+    end
+
+    @inline function Y_mono(p, x, A₁, A_inf)
+        @. ((A_inf + A₁ / p[3] * exp(0.5 * (p[2]/p[3])^2 - (x - p[1]) / p[3])) *
+        (erf(((x - p[1]) / p[2] - p[2] / p[3]) * sqrt2_inv) + 1) / 2)
+    end
+
+    # Step 1: Data selection based on the time bounds
+    cut = (t0 .< file[:, 1]) .& (file[:, 1] .< uppertimebound)  # Apply the time limits
+    t = file[cut, 1]  # Extract the time column
+
+    # Preallocate kinetic traces for each selected column
+    KineticTraces = [DataFrame() for _ in columns]
+
+    # Step 2: Resize data for each selected column
+    for (i, col) in enumerate(columns)
+        trace_data = file[cut, col]  # Extract raw kinetic trace data for each column
+        t_resized, trace_resized = Resize(t, trace_data, size)  # Resize the trace
+        KineticTraces[i] = DataFrame(x=t_resized, y=trace_resized)  # Store resized data
+    end
+
+    # Step 3: Initialize guess parameters if not provided
+    if shared_params === nothing
+        t0_guess = 0.2  # Initial guess for t₀
+        FWHM_guess = 1.5  # Initial guess for Full Width at Half Maximum (FWHM)
+        τ₁_guess = 0.2 * (maximum(t) - minimum(t))  # Initial guess for first lifetime
+
+        # Add guesses for other lifetimes based on the model type
+        if model_type == :bi
+            τ₂_guess = 0.8 * (maximum(t) - minimum(t))
+            shared_params = [t0_guess, FWHM_guess, τ₁_guess, τ₂_guess]
+        elseif model_type == :tri
+            τ₂_guess = 0.6 * (maximum(t) - minimum(t))
+            τ₃_guess = 1.0 * (maximum(t) - minimum(t))
+            shared_params = [t0_guess, FWHM_guess, τ₁_guess, τ₂_guess, τ₃_guess]
+        else
+            shared_params = [t0_guess, FWHM_guess, τ₁_guess]
+        end
+    end
+
+    # Step 4: Initialize amplitudes if not provided
+    if initial_amplitudes === nothing
+        if model_type == :bi
+            initial_amplitudes = vcat([mean(trace.y) for trace in KineticTraces], [mean(trace.y) for trace in KineticTraces], [0.0 for trace in KineticTraces])
+        elseif model_type == :tri
+            initial_amplitudes = vcat([mean(trace.y) for trace in KineticTraces], [mean(trace.y) for trace in KineticTraces], [mean(trace.y) for trace in KineticTraces], [0.0 for trace in KineticTraces])
+        else
+            initial_amplitudes = vcat([mean(trace.y) for trace in KineticTraces], [0.0 for trace in KineticTraces])
+        end
+    end
+
+    # Step 5: Define global fitting function
+    function global_fit(params)
+        # Extract shared lifetime parameters and independent amplitudes
+        shared_coeffs = if model_type == :bi params[1:4] elseif model_type == :tri params[1:5] else params[1:3] end
+        amplitudes = params[if model_type == :bi 5 elseif model_type == :tri 6 else 4 end:end]
+
+        total_residual = 0.0
+        for (i, trace) in enumerate(KineticTraces)
+            x = trace.x  # Time values
+            kinetic_trace = trace.y  # Kinetic trace values
+
+            # Calculate model values based on the selected model type
+            model_values = if model_type == :bi
+                Y_bi(shared_coeffs, x, amplitudes[3i-2], amplitudes[3i-1], amplitudes[3i])
+            elseif model_type == :tri
+                Y_tri(shared_coeffs, x, amplitudes[4i-3], amplitudes[4i-2], amplitudes[4i-1], amplitudes[4i])
+            else
+                Y_mono(shared_coeffs, x, amplitudes[2i-1], amplitudes[2i])
+            end
+
+            # Calculate residuals
+            residuals = kinetic_trace .- model_values
+            total_residual += sum(residuals.^2)
+        end
+        return total_residual
+    end
+
+    # Step 6: Optimization process with bounds
+    initial_params = vcat(shared_params, initial_amplitudes)
+
+    # Define bounds for shared lifetimes and amplitudes
+    lower_lifetimes = [(shared_params[i] - abs(shared_params[i]) * (bound1 / 100)) for i in 1:length(shared_params)]
+    upper_lifetimes = [(shared_params[i] + abs(shared_params[i]) * (bound1 / 100)) for i in 1:length(shared_params)]
+
+    lower_amplitudes = fill(-Inf, length(initial_amplitudes))
+    upper_amplitudes = fill(Inf, length(initial_amplitudes))
+
+    lower_bounds = vcat(lower_lifetimes, lower_amplitudes)
+    upper_bounds = vcat(upper_lifetimes, upper_amplitudes)
+
+    results = zeros(num_optimizations, length(initial_params))
+
+    for i in 1:num_optimizations
+        # Add small noise to initial parameters to avoid local minima
+        noisy_coeffs = initial_params .* (1 .+ noise_level * (rand(length(initial_params)) .- 0.5))
+        inner_optimizer = LBFGS(linesearch=LineSearches.BackTracking())
+        result = optimize(global_fit, lower_bounds, upper_bounds, noisy_coeffs, Fminbox(inner_optimizer))
+        results[i, :] = Optim.minimizer(result)
+    end
+
+    # Step 7: Calculate mean and std of the optimization results
+    avg_values = mean(results, dims=1) |> vec
+    std_values = std(results, dims=1) |> vec
+
+    # Step 8: Best-fit parameters for shared lifetimes and independent amplitudes
+    best_lifetimes = round.(avg_values[1:(model_type == :bi ? 4 : model_type == :tri ? 5 : 3)], digits=3)
+    best_amplitudes = round.(avg_values[(model_type == :bi ? 5 : model_type == :tri ? 6 : 4):end], digits=3)
+
+    # Step 9: Compute R² and organize results
+    total_ss = 0.0
+    total_ss_residual = 0.0
+    df_list = []
+
+    final_df = DataFrame(Time = KineticTraces[1].x)  # Start final_df with the time values
+
+    for (i, trace) in enumerate(KineticTraces)
+        x = trace.x  # Time
+        kinetic_trace = trace.y  # Raw data
+
+        # Generate fit based on the best-fit lifetimes and amplitudes
+        fit_values = if model_type == :bi
+            Y_bi(best_lifetimes, x, best_amplitudes[3i-2], best_amplitudes[3i-1], best_amplitudes[3i])
+        elseif model_type == :tri
+            Y_tri(best_lifetimes, x, best_amplitudes[4i-3], best_amplitudes[4i-2], best_amplitudes[4i-1], best_amplitudes[4i])
+        else
+            Y_mono(best_lifetimes, x, best_amplitudes[2i-1], best_amplitudes[2i])
+        end
+
+        residuals = kinetic_trace .- fit_values  # Calculate residuals
+        total_ss_residual += sum(residuals.^2)
+        total_ss += sum((kinetic_trace .- mean(kinetic_trace)).^2)
+
+        # Add raw data, fitted data, and residuals to the output DataFrame
+        final_df[!, "Raw_Trace_$i"] = kinetic_trace
+        final_df[!, "Fit_Trace_$i"] = fit_values
+        final_df[!, "Residuals_Trace_$i"] = residuals
+    end
+
+    # Step 9: Calculate R² and Adjusted R²
+    R² = round(1 - total_ss_residual / total_ss, digits=3)
+    N = nrow(final_df)  # Number of data points
+    p = length(initial_params)  # Number of parameters
+    Adjusted_R² = round(1 - (1 - R²) * (N - 1) / (N - p - 1), digits=3)
+
+    for (i, trace) in enumerate(KineticTraces)
+        x = trace.x  # Time
+        kinetic_trace = trace.y  # Raw data
+
+        # Generate fit based on the best-fit lifetimes and amplitudes
+        fit_values = if model_type == :bi
+            Y_bi(best_lifetimes, x, best_amplitudes[3i-2], best_amplitudes[3i-1], best_amplitudes[3i])
+        elseif model_type == :tri
+            Y_tri(best_lifetimes, x, best_amplitudes[4i-3], best_amplitudes[4i-2], best_amplitudes[4i-1], best_amplitudes[4i])
+        else
+            Y_mono(best_lifetimes, x, best_amplitudes[2i-1], best_amplitudes[2i])
+        end
+
+        residuals = kinetic_trace .- fit_values  # Calculate residuals
+        total_ss_residual += sum(residuals.^2)
+        total_ss += sum((kinetic_trace .- mean(kinetic_trace)).^2)
+
+        # Add raw data, fitted data, and residuals to the output DataFrame
+        final_df[!, "Raw_Trace_$i"] = kinetic_trace
+        final_df[!, "Fit_Trace_$i"] = fit_values
+        final_df[!, "Residuals_Trace_$i"] = residuals
+
+        # Store each trace's data for separate analysis
+        trace_df = DataFrame(Time = x, Raw_Data = kinetic_trace, Fit = fit_values, Residuals = residuals)
+        push!(df_list, trace_df)
+    end
+
+    # Calculate R² (goodness of fit)
+    R² = round(1 - total_ss_residual / total_ss, digits=3)
+
+    # Step 10: Prepare parameter labels and output DataFrames
+    param_labels = ["t₀", "FWHM", "τ₁"]
+    if model_type == :bi
+        push!(param_labels, "τ₂")
+    elseif model_type == :tri
+        push!(param_labels, "τ₂", "τ₃")
+    end
+
+    amplitude_labels = []
+    amp_per_trace = if model_type == :bi 3 else model_type == :tri ? 4 : 2 end
+    for i in 1:length(columns)
+        for j in 1:(amp_per_trace - 1)
+            push!(amplitude_labels, "A" * string(j) * "_Trace_" * string(i))
+        end
+        push!(amplitude_labels, "A_inf_Trace_" * string(i))
+    end
+
+    param_labels = vcat(param_labels, amplitude_labels)
+
+    param_amp_df = DataFrame(Parameter = param_labels, Value = vcat(best_lifetimes, best_amplitudes), Stdev = std_values)
+
+    # Step 11: Visualization using CairoMakie
+    Fit_Fig = Figure(font="", figure_padding=25, fontsize=20)
+    width = 3  # Line width
+
+    color_palette = palette(ColorSchemes.hsv, 5)  # Color scheme
+
+    ax1 = CairoMakie.Axis(Fit_Fig[1, 1],
+        title = "IRF: t₀ = $(best_lifetimes[1]); FWHM = $(best_lifetimes[2])",
+        subtitle = if model_type == :tri
+                        "τ₁ = $(best_lifetimes[3]); τ₂ = $(best_lifetimes[4]); τ₃ = $(best_lifetimes[5]); R² = $R²"
+                    elseif model_type == :bi
+                        "τ₁ = $(best_lifetimes[3]); τ₂ = $(best_lifetimes[4]); R² = $R²"
+                    else
+                        "τ₁ = $(best_lifetimes[3]); R² = $R²"
+                    end,
+        palette = (color = color_palette,),
+        xlabel = "", xlabelsize = 20, xtickalign = 0, xticksize = 10, xgridvisible = false, xminorticksvisible = true,
+        ylabel = "", ylabelsize = 20, ytickalign = 0, yticksize = 10, ygridvisible = false, yminorticksvisible = true)
+
+    # Plot each trace and its fit
+    for (i, trace) in enumerate(KineticTraces)
+        x = trace.x
+        kinetic_trace = trace.y
+        fit_values = if model_type == :bi
+            Y_bi(best_lifetimes, x, best_amplitudes[3i-2], best_amplitudes[3i-1], best_amplitudes[3i])
+        elseif model_type == :tri
+            Y_tri(best_lifetimes, x, best_amplitudes[4i-3], best_amplitudes[4i-2], best_amplitudes[4i-1], best_amplitudes[4i])
+        else
+            Y_mono(best_lifetimes, x, best_amplitudes[2i-1], best_amplitudes[2i])
+        end
+
+        residuals = kinetic_trace .- fit_values  # Calculate residuals
+
+        lines!(Fit_Fig[1, 1], x, kinetic_trace, linewidth = width, label = "Trace $i", color = color_palette[i])
+        lines!(Fit_Fig[1, 1], x, fit_values, linewidth = width*0.5, linestyle = :dash, color = :black)
+    end
+
+    axislegend(ax1, position = :rb, nbanks = 3, framevisible = false, fontsize = 15)
+
+    # Residuals plot
+    ax2 = CairoMakie.Axis(Fit_Fig[2, 1], title = "Residuals",
+        xlabel = "", xlabelsize = 20, xtickalign = 0, xticksize = 10, xgridvisible = false, xminorticksvisible = true,
+        ylabel = "", ylabelsize = 20, ytickalign = 0, yticksize = 10, ygridvisible = false, yminorticksvisible = true)
+
+    for (i, trace) in enumerate(KineticTraces)
+        x = trace.x
+        fit_values = if model_type == :bi
+            Y_bi(best_lifetimes, x, best_amplitudes[3i-2], best_amplitudes[3i-1], best_amplitudes[3i])
+        elseif model_type == :tri
+            Y_tri(best_lifetimes, x, best_amplitudes[4i-3], best_amplitudes[4i-2], best_amplitudes[4i-1], best_amplitudes[4i])
+        else
+            Y_mono(best_lifetimes, x, best_amplitudes[2i-1], best_amplitudes[2i])
+        end
+
+        residuals = trace.y .- fit_values
+
+        lines!(Fit_Fig[2, 1], x, residuals, linewidth = width, color = :black)
+    end
+
+    linkxaxes!(ax1, ax2)
+
+    colsize!(Fit_Fig.layout, 1, Aspect(1, 1.5))
+    rowsize!(Fit_Fig.layout, 1, 300)
+    rowsize!(Fit_Fig.layout, 2, 130)
+    resize_to_layout!(Fit_Fig)
+    display(Fit_Fig)
+    save("JULIA/Outputs/TriFit_Fig.png", Fit_Fig)
+
+    # Return the final DataFrame with traces, parameters, and R²
+    return final_df, param_amp_df, best_lifetimes, best_amplitudes, R², Adjusted_R²
+end
+
+
 function MonoFitIRF_New(file,column,t0,uppertimebound,coeffs, bound1,bound2,guess,size)
 
     function Resize(file,column, size)
@@ -433,13 +730,21 @@ function MaxNorm(y)
 end
 
 # Interpolate dataframe to different x values (interval must be inside the bounds of the data)
-function InterpOnRange(Data,start,stop, interval)
+function InterpOnRange(Data::AbstractMatrix, start::Number, stop::Number, interval::Number)::DataFrame
+    # Check if start and stop are within the bounds of the data
+    if start < minimum(Data[:,1]) || stop > maximum(Data[:,1])
+        throw(ArgumentError("Start and stop must be within the bounds of the data"))
+    end
 
+    # Generate the x values at which to interpolate
     x_out = collect(start:interval:stop)
-    Interp  = LinearInterpolation(Data[:,1],Data[:,2])
+    
+    # Perform linear interpolation
+    Interp  = LinearInterpolation(Data[:,1], Data[:,2])
     y_out = Interp(x_out)
 
-    df = DataFrame(x = x_out,y = y_out)
+    # Create and return the interpolated DataFrame
+    df = DataFrame(x = x_out, y = y_out)
     return df
 end
 

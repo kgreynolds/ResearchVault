@@ -11,26 +11,15 @@ Kris_Figure_Theme = merge(Theme(
 set_theme!(Kris_Figure_Theme)
 
 
-
-
-## IMPORT DATA
-file1 = CSV.read("path", header = true, DataFrame)
-
-# Data Workup
-####################################################################################################
-Data = MonoFitIRF_New(Data,2,0.0, 800, [0.008, 0.001, 50.592, 307.017, 0.0], 10,Inf,false,10000)
-Data = BiFitIRF_new(Data,2,0.0, 800, [0.008, 0.001, 50.592, 307.017,10.0, 100, 0.0], 10,Inf,false,10000)
-
-
-
 #### DCB Ns TA 1mM, 291 nm Pump ################################################################################################
     DCB_TA_Spectra = CSV.read("/Users/kris/Desktop/ResearchVault/RESEARCH/NOCERA GROUP/PROJECTS/Radical Photophysics/Experiemnts/Nanosecond TA/2024_09_25/Analysis/DCB_1mM_MeCN_2mm_291nmpump_TA_Spectra_Surface_processed.csv", header = true, DataFrame)
     DCB_TA_Kinetics = CSV.read("/Users/kris/Desktop/ResearchVault/RESEARCH/NOCERA GROUP/PROJECTS/Radical Photophysics/Experiemnts/Nanosecond TA/2024_09_25/Analysis/DCB_1mM_MeCN_2mm_291nmpump_TA_Kinetics_Surface_processed.csv", header = true, DataFrame)
 
 
-    DCB_TA_Kinetics_440nm = BiFitIRF_new(DCB_TA_Kinetics,2,-10.0, 5000, [0.6679, 0.004, 0.0756, 19.5134, 18.8668, 7220.816, -0.0016], 10,100,false,200)
-    DCB_TA_Kinetics_519nm = BiFitIRF_new(DCB_TA_Kinetics,4,-10.0, 5000, [0.6679, 0.004, 0.0294, 26.9713, 9.2331, 3344.3848, -0.0006], 10,100,false,200)
-    DCB_TA_Kinetics_612nm = BiFitIRF_new(DCB_TA_Kinetics,3,-10.0, 5000, [0.6679, 0.004, 0.067, 19.3842, 0.3428, 3344.4099, -0.0003], 10,100,false,200)
+    DCB_TA_Kinetics_440nm = BiFitIRF_new(DCB_TA_Kinetics,2,-10.0, 5000, [4.4806, 0.404, 0.0653, 11.6751, 6.5572, 3688.3081, -0.0007], 10,300,false,200)
+    DCB_TA_Kinetics_519nm = BiFitIRF_new(DCB_TA_Kinetics,4,-10.0, 5000, [4.4806, 0.404, 0.0261, 11.7496, 10.0272, 3535.3549, -0.0007], 10,100,false,200)
+    DCB_TA_Kinetics_612nm = BiFitIRF_new(DCB_TA_Kinetics,3,-10.0, 5000, [4.4805, 0.404, 0.0551, 18.7118, 0.3715, 3535.4441, -0.0003], 10,100,false,200)
+
 
 
     function DCB_ns_TA_Fig(f = Figure())
@@ -44,7 +33,7 @@ Data = BiFitIRF_new(Data,2,0.0, 800, [0.008, 0.001, 50.592, 307.017,10.0, 100, 0
         ### First Panel TA Spectra  ##############################################################################
 
             ax =    CairoMakie.Axis(f[1,1], palette = (color = palette(ColorSchemes.inferno, ncol(TA_Spectra)+1),), ## or replace ncol with Integer 
-                    title = "DCA TA Spectra",
+                    title = "DCB TA Spectra",
                     xlabel = "Wavelength (nm)", 
                     ylabel = "ΔA (OD)", 
                     xminorticks = IntervalsBetween(2)
@@ -74,7 +63,7 @@ Data = BiFitIRF_new(Data,2,0.0, 800, [0.008, 0.001, 50.592, 307.017,10.0, 100, 0
         #### Second Panel TA KINETICS ##############################################################################
 
             ax2 =    CairoMakie.Axis(f[1,2], palette = (color = palette(ColorSchemes.hsv, 4),),
-                    title = "DCA TA Kinetics",
+                    title = "DCB TA Kinetics",
                     xlabel = "Time (ns)", 
                     ylabel = "ΔA (OD)", 
                     # xscale = Makie.Symlog10(1.0), 
@@ -127,12 +116,11 @@ Data = BiFitIRF_new(Data,2,0.0, 800, [0.008, 0.001, 50.592, 307.017,10.0, 100, 0
     DCN_TA_Spectra = CSV.read("/Users/kris/Desktop/ResearchVault/RESEARCH/NOCERA GROUP/PROJECTS/Radical Photophysics/Experiemnts/Nanosecond TA/2024_09_25/Analysis/DCN_500uM_MeCN_2mm_333nmpump_TA_Spectra_Surface_processed.csv", header = true, DataFrame)
     DCN_TA_Kinetics = CSV.read("/Users/kris/Desktop/ResearchVault/RESEARCH/NOCERA GROUP/PROJECTS/Radical Photophysics/Experiemnts/Nanosecond TA/2024_09_25/Analysis/DCN_500uM_MeCN_2mm_333nmpump_TA_Kinetics_Surface_processed.csv", header = true, DataFrame)
 
-    DCN_TA_Kinetics_336nm = BiFitIRF_new(DCN_TA_Kinetics,5,-10.0, 5000, [0.6682, 0.004, 0.1421, 7.0362, 22.9925, 4083.2639, -0.0043], 10,100,false,200)
-    DCN_TA_Kinetics_447nm = BiFitIRF_new(DCN_TA_Kinetics,3,-10.0, 5000, [0.6679, 0.004, 0.1472, 9.724, 10.2999, 2041.632, 0.0011], 10,100,false,200)
-    DCN_TA_Kinetics_484nm = BiFitIRF_new(DCN_TA_Kinetics,2,-10.0, 5000,[0.6679, 0.004, 0.3354, 12.4845, 15.8007, 3515.0873, 0.0], 100,100,false,200)
-    DCN_TA_Kinetics_852nm = BiFitIRF_new(DCN_TA_Kinetics,4,-10.0, 5000, [0.6725, 0.004, 0.0648, 38.7684, 1.7461, 3344.442, -0.0003], 10,100,false,200)
+    DCN_TA_Kinetics_447nm = BiFitIRF_new(DCN_TA_Kinetics,3,-10.0, 5000, [0.1524, 0.9264, 0.1457, 15.9869, 19.7026, 3322.9794, -0.0001], 10,100,false,200)
+    DCN_TA_Kinetics_484nm = BiFitIRF_new(DCN_TA_Kinetics,2,-10.0, 5000,[0.1524, 0.9264, 0.3506, 12.309, 15.7783, 3510.3211, 0.0], 10,1000,false,200)
+    DCN_TA_Kinetics_852nm = BiFitIRF_new(DCN_TA_Kinetics,4,-10.0, 5000, [0.1372, 0.8338, 0.0529, 17.4227, 2.0174, 3514.1113, -0.0004], 10,100,false,200)
 
-    DCN_global = GlobalIRF_Fit(DCN_TA_Kinetics, [2,3], -10.0, 4000.0, :bi,[0.6725, 0.004, 15.8007,  3515.0873, 154.334],nothing, 10, 1000, false,5,0.1, 200)
+    DCN_global = GlobalIRF(DCN_TA_Kinetics, [2, 3], -10.0, 5000.0, :bi,[0.13, 0.9, 17.296, 3863.465],[1.771, 11.858, 0.0, 0.982, 20.885, -0.0], 50, 100, 2,0.1, 200)
 
 
     function DCN_ns_TA_Fig(f = Figure())
@@ -236,7 +224,7 @@ Data = BiFitIRF_new(Data,2,0.0, 800, [0.008, 0.001, 50.592, 307.017,10.0, 100, 0
     DCA_TA_Kinetics_618nm = BiFitIRF_new(DCA_TA_Kinetics,2,-10.0, 5000,[0.1464, 0.9702, 89.8437, 18.8483, -89.07, 18.9096, 0.0002], 10,100,false,200)
 
 
-    DCA_global = GlobalIRF_Fit(DCA_TA_Kinetics, [2,3,4], -10.0, 4000.0, :mono, [0.171, 1.045, 20.024, 0.001],[0.794, 1.444, 0.51], 100, 100, false,20,0.5, 200)
+    DCN_global = GlobalIRF(DCA_TA_Kinetics, [2, 3, 4], -10.0, 100.0, :mono,[0.178, 1.052, 13.844],[0.809, -0.0, 1.415, 0.001, 0.501, 0.001], 100, 100, 20,0.1, 200)
 
 
     function DCA_ns_TA_Fig(f = Figure())
@@ -329,7 +317,6 @@ Data = BiFitIRF_new(Data,2,0.0, 800, [0.008, 0.001, 50.592, 307.017,10.0, 100, 0
     end
     DCA_ns_TA_Fig()
     save("JULIA/Outputs/DCA_ns_TA_Fig.png",DCA_ns_TA_Fig())
-
 
 
 
